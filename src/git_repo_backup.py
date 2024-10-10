@@ -4,6 +4,7 @@ import zipfile
 from datetime import datetime
 
 import git
+from git import InvalidGitRepositoryError
 from tqdm import tqdm
 
 
@@ -25,8 +26,19 @@ class GitRepoBackup(object):
         result = self._get_files_from_tree(tree)
         return result
 
-    def backup(self, repo_path: str, dest_path: str, dest_type: str = 'zip', dest_name: str = '', add_timestamp: bool = True):
-        file_list = self._get_git_managed_file_list(repo_path)
+    def backup(self, repo_path: str, dest_path: str, dest_type: str = 'zip', dest_name: str = '', add_timestamp: bool = True) -> str:
+        if os.path.exists(repo_path) is False:
+            return "[Error] git files - Repository path does not exist"
+        if os.path.exists(dest_path) is False:
+            return "[Error] git files - Destination path does not exist"
+
+        try:
+            file_list = self._get_git_managed_file_list(repo_path)
+        except InvalidGitRepositoryError as e:
+            return "[Error] git files - Invalid git repository"
+        except Exception as e:
+            return "[Error] git files - " + type(e).__name__
+
         # for file in file_list:
         #     print(file)
 
@@ -63,3 +75,5 @@ class GitRepoBackup(object):
 
                     shutil.copyfile(filename_src, filename_dest)
                     pbar.update(1)
+
+        return "[Success] Backup completed"
