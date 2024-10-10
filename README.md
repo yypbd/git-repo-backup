@@ -2,6 +2,13 @@
 
 ## Description
 
+GitRepoBackup is a utility for backup only files managed by git repositories.
+
+## Features
+
+- Backup files managed by git repositories
+- Copy files to a directory
+- Compress files to a zip file
 
 ## Installation
 
