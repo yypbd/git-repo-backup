@@ -4,6 +4,7 @@ import zipfile
 from datetime import datetime
 
 import git
+from tqdm import tqdm
 
 
 class GitRepoBackup(object):
@@ -25,10 +26,6 @@ class GitRepoBackup(object):
         return result
 
     def backup(self, repo_path: str, dest_path: str, dest_type: str = 'zip', dest_name: str = '', add_timestamp: bool = True):
-        # TODO : 예외 처리 필요
-        # git 저장소가 아닌 경우
-        # 대상 경로가 없는 경우
-
         file_list = self._get_git_managed_file_list(repo_path)
         # for file in file_list:
         #     print(file)
@@ -42,26 +39,27 @@ class GitRepoBackup(object):
         dest_path = os.path.join(dest_path, dest_name)
 
         if dest_type == 'zip':
-            # zip 파일로 압축
+            # comporess
             zip_file_path = dest_path + ".zip"
             zip_file = zipfile.ZipFile(zip_file_path, 'w')
 
-            for file in file_list:
-                filename_src = os.path.join(repo_path, file)
-                zip_file.write(filename_src, file, compress_type=zipfile.ZIP_DEFLATED)
+            with tqdm(total=len(file_list)) as pbar:
+                for file in file_list:
+                    filename_src = os.path.join(repo_path, file)
+                    zip_file.write(filename_src, file, compress_type=zipfile.ZIP_DEFLATED)
+                    pbar.update(1)
 
             zip_file.close()
         else:
-            # 파일 복사
-            for file in file_list:
-                filename_src = os.path.join(repo_path, file)
-                filename_dest = os.path.join(dest_path, file)
+            # copy files
+            with tqdm(total=len(file_list)) as pbar:
+                for file in file_list:
+                    filename_src = os.path.join(repo_path, file)
+                    filename_dest = os.path.join(dest_path, file)
 
-                dest_file_path = os.path.dirname(filename_dest)
-                if not os.path.exists(dest_file_path + "/"):
-                    os.makedirs(dest_file_path, exist_ok=True)
+                    dest_file_path = os.path.dirname(filename_dest)
+                    if not os.path.exists(dest_file_path + "/"):
+                        os.makedirs(dest_file_path, exist_ok=True)
 
-                shutil.copyfile(filename_src, filename_dest)
-
-
-
+                    shutil.copyfile(filename_src, filename_dest)
+                    pbar.update(1)
