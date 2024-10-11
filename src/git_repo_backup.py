@@ -4,12 +4,12 @@ import zipfile
 from datetime import datetime
 
 import git
-from git import InvalidGitRepositoryError
+from git import InvalidGitRepositoryError, Tree
 from tqdm import tqdm
 
 
 class GitRepoBackup(object):
-    def _get_files_from_tree(self, tree):
+    def _get_files_from_tree(self, tree: Tree) -> list[str]:
         result = []
         for blob in tree.blobs:
             result.append(blob.path)
@@ -19,7 +19,7 @@ class GitRepoBackup(object):
 
         return result
 
-    def _get_git_managed_file_list(self, repo_path: str) -> list:
+    def _get_git_managed_file_list(self, repo_path: str) -> list[str]:
         repo = git.Repo(repo_path)
         tree = repo.head.commit.tree
 
@@ -34,7 +34,7 @@ class GitRepoBackup(object):
 
         try:
             file_list = self._get_git_managed_file_list(repo_path)
-        except InvalidGitRepositoryError as e:
+        except InvalidGitRepositoryError:
             return "[Error] git files - Invalid git repository"
         except Exception as e:
             return "[Error] git files - " + type(e).__name__
@@ -51,7 +51,7 @@ class GitRepoBackup(object):
         dest_path = os.path.join(dest_path, dest_name)
 
         if dest_type == 'zip':
-            # comporess
+            # compress
             zip_file_path = dest_path + ".zip"
             zip_file = zipfile.ZipFile(zip_file_path, 'w')
 
