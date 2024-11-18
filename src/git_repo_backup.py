@@ -26,12 +26,19 @@ class GitRepoBackup(object):
         result = self._get_files_from_tree(tree)
         return result
 
-    def backup(self, repo_path: str, dest_path: str, dest_type: str = 'zip', dest_name: str = '', add_timestamp: bool = True) -> str:
+    def _get_untracked_file_list(self, repo_path: str) -> list[str]:
+        repo = git.Repo(repo_path)
+        untracked_files = repo.untracked_files
+        return untracked_files
+
+    def backup(self, repo_path: str, dest_path: str, dest_type: str = 'zip', dest_name: str = '', add_timestamp: bool = True, add_untracked: bool = False) -> str:
+        # validate directory
         if os.path.exists(repo_path) is False:
             return "[Error] git files - Repository path does not exist"
         if os.path.exists(dest_path) is False:
             return "[Error] git files - Destination path does not exist"
 
+        # get managed files
         try:
             file_list = self._get_git_managed_file_list(repo_path)
         except InvalidGitRepositoryError:
@@ -39,12 +46,17 @@ class GitRepoBackup(object):
         except Exception as e:
             return "[Error] git files - " + type(e).__name__
 
+        # add untracked files
+        if add_untracked is True:
+            untracked_file_list = self._get_untracked_file_list(repo_path)
+            file_list.extend(untracked_file_list)
+
         # for file in file_list:
         #     print(file)
 
         if dest_name == '':
             dest_name = os.path.basename(repo_path)
-        if add_timestamp:
+        if add_timestamp is True:
             now = datetime.now()
             dest_name = dest_name + "_" + now.strftime("%Y%m%d%H%M%S")
 
